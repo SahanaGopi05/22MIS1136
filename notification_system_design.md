@@ -569,3 +569,58 @@ Disadvantages:
 - Pagination for notification listing
 - Lazy loading in frontend
 - Indexing on frequently queried columns
+
+# Stage 5
+
+## Issues
+
+- Sending notifications one by one is slow
+- Email failures can interrupt the process
+- High load on the server during bulk notifications
+
+---
+
+## Improved Design
+
+Notifications can first be stored in the database and email sending can be handled separately using queues.
+
+This avoids blocking the main application flow.
+
+---
+
+## Failed Email Handling
+
+If email delivery fails:
+- move failed jobs to retry queue
+- retry after some delay
+- store failure logs
+
+---
+
+## Updated Flow
+
+javascript
+async function notifyStudents(studentIds, message) {
+
+    for (const id of studentIds) {
+
+        await saveNotification(id, message);
+
+        emailQueue.add({
+            studentId: id,
+            message
+        });
+
+        sendRealtimeNotification(id, message);
+    }
+}
+
+
+---
+
+## Benefits
+
+- Faster bulk processing
+- Better reliability
+- Easier handling of failed emails
+- Reduced database and server load
