@@ -624,3 +624,72 @@ async function notifyStudents(studentIds, message) {
 - Better reliability
 - Easier handling of failed emails
 - Reduced database and server load
+
+# Stage 6
+
+## Priority Inbox Design
+
+Notifications are arranged using:
+- notification category
+- notification time
+
+Higher importance is given to placement related notifications, followed by results and events.
+
+Priority order:
+- Placement
+- Result
+- Event
+
+If two notifications have the same priority, the newer notification is shown first.
+
+---
+
+## Handling Incoming Notifications
+
+Instead of sorting the complete list repeatedly, only the current top 10 notifications are maintained.
+
+Whenever a new notification arrives:
+- calculate its priority
+- compare it with existing notifications
+- update the list if required
+
+This avoids unnecessary sorting on large datasets.
+
+---
+
+## Sample Logic
+
+javascript
+const weights = {
+  Placement: 30,
+  Result: 20,
+  Event: 10
+};
+
+function sortNotifications(items) {
+
+  return items.sort((a, b) => {
+
+    const first =
+      weights[b.Type] - weights[a.Type];
+
+    if (first !== 0) {
+      return first;
+    }
+
+    return (
+      new Date(b.Timestamp) -
+      new Date(a.Timestamp)
+    );
+
+  }).slice(0, 10);
+}
+
+
+---
+
+## Benefits
+
+- Quick access to important notifications
+- Less processing overhead
+- Easier to manage live incoming notifications
