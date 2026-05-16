@@ -460,3 +460,112 @@ FROM notifications
 WHERE type = 'placement'
 AND created_at >= NOW() - INTERVAL '7 days';
 ```
+# Stage 4
+
+## Solution
+
+Fetching notifications from the database every time a page loads increases database traffic and slows down the application when the number of users grows. To improve performance, caching and real-time updates can be used.
+
+---
+
+## Redis Caching
+
+Recent notifications and unread counts can be stored in Redis.
+
+Flow:
+- Check Redis first
+- If cache exists, return cached data
+- Otherwise fetch from database and update cache
+
+Advantages:
+- Faster response time
+- Reduces database queries
+
+Disadvantages:
+- Extra memory usage
+- Cache invalidation handling required
+
+---
+
+## Pagination
+
+Notifications should be fetched in smaller batches.
+
+Example:
+
+```http
+GET /api/v1/notifications?page=1&limit=20
+```
+
+Advantages:
+- Faster queries
+- Lower server load
+
+Disadvantages:
+- Multiple requests required for more data
+
+---
+
+## WebSockets
+
+WebSockets can be used to push notifications instantly instead of repeatedly fetching notifications from APIs.
+
+Advantages:
+- Real-time updates
+- Reduces unnecessary API requests
+
+Disadvantages:
+- More complex implementation
+- Persistent socket connections consume memory
+
+---
+
+## Lazy Loading
+
+Notifications should load only when the notification section is opened.
+
+Advantages:
+- Faster initial page load
+- Fewer unnecessary requests
+
+Disadvantages:
+- Small delay while opening notifications
+
+---
+
+## Database Indexing
+
+Indexes can be added on:
+- user_id
+- is_read
+- created_at
+
+Advantages:
+- Faster filtering and sorting
+
+Disadvantages:
+- Slower insert/update operations
+- Extra storage required
+
+---
+
+## Archiving Old Notifications
+
+Old notifications can be moved to a separate archive table.
+
+Advantages:
+- Smaller active dataset
+- Faster queries on recent notifications
+
+Disadvantages:
+- Archived notifications take longer to access
+
+---
+
+## Final Approach
+
+- Redis for caching
+- WebSockets for real-time updates
+- Pagination for notification listing
+- Lazy loading in frontend
+- Indexing on frequently queried columns
