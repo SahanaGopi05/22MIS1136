@@ -229,3 +229,147 @@ GET /api/v1/notifications/filter
   "error": "Invalid notification ID"
 }
 ```
+
+# Stage 2
+
+## Database Choice
+
+PostgreSQL
+
+---
+
+## Notification Table Schema
+
+```sql
+CREATE TABLE notifications (
+    id UUID PRIMARY KEY,
+    title VARCHAR(255),
+    message TEXT,
+    type VARCHAR(50),
+    priority VARCHAR(20),
+    is_read BOOLEAN DEFAULT FALSE,
+    user_id VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+---
+
+## Possible Problems with Large Data Volume
+
+- Slower notification retrieval
+- High database load during peak usage
+- Delayed unread count calculations
+- Increased storage usage
+- Slower filtering and sorting operations
+
+---
+
+## Solutions
+
+- Add indexes on user_id and created_at
+- Use pagination for notification fetching
+- Archive old notifications
+- Cache unread notification counts
+- Use WebSockets for real-time notification delivery
+- Use read replicas for scaling read operations
+
+---
+
+## Queries
+
+### Create Notification
+
+```sql
+INSERT INTO notifications (
+    id,
+    title,
+    message,
+    type,
+    priority,
+    is_read,
+    user_id
+)
+VALUES (
+    'n_01',
+    'Afford Internship',
+    'Internship applications',
+    'placement',
+    'high',
+    false,
+    'u_01'
+);
+```
+
+---
+
+### Get Notifications
+
+```sql
+SELECT *
+FROM notifications
+WHERE user_id = 'u_01'
+ORDER BY created_at DESC
+LIMIT 10;
+```
+
+---
+
+### Get Notification By ID
+
+```sql
+SELECT *
+FROM notifications
+WHERE id = 'n_01';
+```
+
+---
+
+### Mark Notification as Read
+
+```sql
+UPDATE notifications
+SET is_read = true
+WHERE id = 'n_01';
+```
+
+---
+
+### Mark All Notifications as Read
+
+```sql
+UPDATE notifications
+SET is_read = true
+WHERE user_id = 'u_01';
+```
+
+---
+
+### Delete Notification
+
+```sql
+DELETE FROM notifications
+WHERE id = 'n_01';
+```
+
+---
+
+### Get Unread Notifications Count
+
+```sql
+SELECT COUNT(*)
+FROM notifications
+WHERE user_id = 'u_01'
+AND is_read = false;
+```
+
+---
+
+### Filter Notifications
+
+```sql
+SELECT *
+FROM notifications
+WHERE type = 'exam'
+AND priority = 'high';
+```
